@@ -1,11 +1,15 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import '../app.css';
+	import { Toaster } from 'svelte-sonner';
+	import { ModeWatcher } from 'mode-watcher';
+	import { FirebaseApp } from 'svelte-firekit';
 
 	let { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
+<ModeWatcher />
+<Toaster richColors position="top-right" />
 
-{@render children()}
+<FirebaseApp>
+	{@render children()}
+</FirebaseApp>

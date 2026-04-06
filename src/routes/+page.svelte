@@ -1,9 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-
-	onMount(() => {
-		console.log('Hello World');
-	});
+	onMount(() => goto('/p'));
 </script>
-
-<h1>Taskvio</h1>

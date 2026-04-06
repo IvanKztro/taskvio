@@ -1,0 +1,9 @@
+import * as v from 'valibot';
+
+export const resetPasswordSchema = v.object({
+	email: v.pipe(
+		v.string(),
+		v.minLength(1, 'Please enter your email.'),
+		v.email('Invalid email address.')
+	)
+});
