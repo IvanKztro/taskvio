@@ -13,6 +13,7 @@
 	import { Timestamp } from 'firebase/firestore';
 	import { page } from '$app/stores';
 	import BoardTask from '$lib/modules/hyvflow/components/tasks/board/board-task.svelte';
+	import { dragState } from '$lib/modules/hyvflow/stores/drag-state';
 
 	let {
 		statusIndex,
@@ -36,12 +37,11 @@
 		draggingTask?: Task;
 	} = $props();
 
-	// ---- drag state (shared up/down via bindable on each BoardTask) ----
+	// ---- drag state ----
 	let taskIndexDrop = $state(-1);
 	let taskdropdata = $state<any>(null);
 	let isdraggingtask = $state(false);
 	let isdraggingstatus = $state(false);
-	let datatemp = $state<any>(null);
 	let isDragOverList = $state(false);
 
 	// ---- milestone path helpers ----
@@ -142,6 +142,7 @@
 	// ---- ondragover: calculate drop index ----
 	function handleDragOver(e: DragEvent) {
 		e.preventDefault();
+		e.stopPropagation(); // prevent column's ondragover from overriding
 		isDragOverList = true;
 		const target = e.currentTarget as HTMLElement;
 		const children = Array.from(target.querySelectorAll('[data-task-card]')) as HTMLElement[];
@@ -169,17 +170,19 @@
 	// ---- ondrop ----
 	async function handleDrop(e: DragEvent) {
 		e.preventDefault();
+		e.stopPropagation(); // prevent column-level drop handler from also firing
 		isDragOverList = false;
 
-		if (!datatemp) return;
+		const data = dragState.get();
+		if (!data) return;
 
-		const { task: draggedTask, taskslist: sourceList, sourceMilestoneId } = datatemp;
+		const { task: draggedTask, taskslist: sourceList, sourceMilestoneId } = data;
 		const dropIndex = taskIndexDrop >= 0 ? taskIndexDrop : tasks.length;
 
 		// Cross-milestone
 		if (sourceMilestoneId && sourceMilestoneId !== projectManager.milestoneId) {
-			await dropInOtherMilestone(draggedTask, datatemp);
-			datatemp = null;
+			await dropInOtherMilestone(draggedTask, data);
+			dragState.clear();
 			taskIndexDrop = -1;
 			return;
 		}
@@ -193,7 +196,7 @@
 			await dropDifferentStatusOrSprint(draggedTask, sourceList, tasks, dropIndex);
 		}
 
-		datatemp = null;
+		dragState.clear();
 		taskIndexDrop = -1;
 	}
 </script>
@@ -206,9 +209,9 @@
 	ondrop={handleDrop}
 >
 	{#each tasks as task, i}
-		<!-- Ghost drop preview above this card -->
+		<!-- Drop indicator line above card -->
 		{#if isDragOverList && taskIndexDrop === i}
-			<div class="h-1.5 rounded-full bg-primary/40 transition-all"></div>
+			<div class="mx-1 h-0.5 rounded-full bg-primary shadow-[0_0_6px_2px_rgba(var(--primary)/0.4)] transition-all"></div>
 		{/if}
 
 		<div data-task-card role="listitem">
@@ -228,22 +231,22 @@
 				bind:taskdropdata
 				bind:isdraggingtask
 				bind:isdraggingstatus
-				bind:datatemp
 			/>
 		</div>
 	{/each}
 
-	<!-- Ghost at end of list -->
+	<!-- Drop indicator at end of list -->
 	{#if isDragOverList && taskIndexDrop >= tasks.length}
-		<div class="h-1.5 rounded-full bg-primary/40 transition-all"></div>
+		<div class="mx-1 h-0.5 rounded-full bg-primary shadow-[0_0_6px_2px_rgba(var(--primary)/0.4)] transition-all"></div>
 	{/if}
 
-	<!-- Empty drop target indicator -->
-	{#if tasks.length === 0 && isDragOverList}
+	<!-- Empty column drop zone -->
+	{#if tasks.length === 0}
 		<div
-			class="flex h-10 items-center justify-center rounded-lg border-2 border-dashed border-primary/40 text-xs text-muted-foreground"
+			class="flex h-16 items-center justify-center rounded-lg border-2 border-dashed transition-all duration-150
+				{isDragOverList ? 'border-primary/60 bg-primary/5 text-primary' : 'border-border/30 text-muted-foreground/40'}"
 		>
-			Drop here
+			<span class="text-xs">{isDragOverList ? 'Release to drop' : 'No tasks'}</span>
 		</div>
 	{/if}
 </div>

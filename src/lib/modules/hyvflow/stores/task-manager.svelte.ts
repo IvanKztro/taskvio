@@ -51,8 +51,10 @@ class TaskManager {
 	}
 
 	async updateTask(data: Partial<Task>, taskid: string): Promise<any> {
+		const projectId = this.projectId || projectManager.projectData?.id;
+		const milestoneId = this.milestoneId || projectManager.milestoneData?.id;
 		const result = await firekitDocMutations.update(
-			`projects/${this.projectId}/milestones/${this.milestoneId}/tasks/${taskid}`,
+			`projects/${projectId}/milestones/${milestoneId}/tasks/${taskid}`,
 			{ ...data }
 		);
 		refreshTaskTree.update((n) => n + 1);

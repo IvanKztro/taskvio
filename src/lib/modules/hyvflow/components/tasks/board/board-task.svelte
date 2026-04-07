@@ -29,6 +29,7 @@
 	// BoardTasks is imported lazily to avoid circular reference at module level
 	// it is used in the subtask section below via a dynamic import pattern
 	import BoardTasks from '$lib/modules/hyvflow/components/tasks/board/board-tasks.svelte';
+	import { dragState } from '$lib/modules/hyvflow/stores/drag-state';
 
 	let {
 		task,
@@ -45,8 +46,7 @@
 		taskIndexDrop = $bindable(),
 		taskdropdata = $bindable(),
 		isdraggingtask = $bindable(),
-		isdraggingstatus = $bindable(),
-		datatemp = $bindable()
+		isdraggingstatus = $bindable()
 	}: {
 		task: Task;
 		taskslist: Task[];
@@ -63,7 +63,6 @@
 		taskdropdata: any;
 		isdraggingtask: boolean;
 		isdraggingstatus: boolean;
-		datatemp: any;
 	} = $props();
 
 	// ---- local state ----
@@ -101,7 +100,7 @@
 	function handleDragStart(e: DragEvent) {
 		e.stopPropagation(); // prevent bubbling to status column drag handler
 		isdraggingtask = true;
-		datatemp = {
+		dragState.set({
 			task,
 			taskslist,
 			taskIndex,
@@ -111,12 +110,13 @@
 			sprintId,
 			level,
 			sourceMilestoneId: projectManager.milestoneId
-		};
-		e.dataTransfer?.setData('text/plain', JSON.stringify({ taskId: task.id }));
+		});
+		e.dataTransfer?.setData('text/plain', task.id);
 	}
 
 	function handleDragEnd() {
 		isdraggingtask = false;
+		dragState.clear();
 	}
 
 	// ---- open modal ----
@@ -132,10 +132,10 @@
 	ondragend={handleDragEnd}
 	role="button"
 	tabindex="0"
-	class="group relative"
+	class="group relative cursor-grab active:cursor-grabbing {isdraggingtask ? 'opacity-40 scale-[0.97]' : ''} transition-all duration-150"
 >
 	<Card.Root
-		class="cursor-pointer border border-border/50 bg-card shadow-none transition-shadow hover:shadow-sm"
+		class="border border-border/50 bg-card shadow-none transition-all duration-150 hover:shadow-sm hover:border-border"
 	>
 		<Card.Content class="p-2.5">
 			<!-- Header row: name + options -->
