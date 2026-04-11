@@ -136,6 +136,7 @@
 >
 	<Card.Root
 		class="border border-border/50 bg-card shadow-none transition-all duration-150 hover:shadow-sm hover:border-border"
+		onclick={openTask}
 	>
 		<Card.Content class="p-2.5">
 			<!-- Header row: name + options -->
@@ -242,7 +243,10 @@
 						<Tooltip.Root>
 							<Tooltip.Trigger>
 								<button
-									onclick={() => (showSubtasks = !showSubtasks)}
+									onclick={(e) => {
+										e.stopPropagation();
+										showSubtasks = !showSubtasks;
+									}}
 									class="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
 								>
 									<IconSubtask class="size-3" />

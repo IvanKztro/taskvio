@@ -127,8 +127,8 @@
 					bind:value={editingName}
 					class="h-7 flex-1 text-sm"
 					onkeydown={(e) => {
-						if (e.key === 'Enter') saveRename(i);
-						if (e.key === 'Escape') (editingIndex = null);
+						if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); saveRename(i); }
+						if (e.key === 'Escape') { e.stopPropagation(); editingIndex = null; }
 					}}
 					autofocus
 				/>
@@ -160,7 +160,7 @@
 			placeholder="Add an item..."
 			class="h-8 flex-1 text-sm"
 			onkeydown={(e) => {
-				if (e.key === 'Enter') addItem();
+				if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); addItem(); }
 			}}
 		/>
 		<Button variant="ghost" size="sm" class="h-8 gap-1" onclick={addItem}>

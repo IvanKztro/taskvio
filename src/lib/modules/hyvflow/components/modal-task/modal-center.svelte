@@ -27,6 +27,8 @@
 	let leveltasks: number = $state(0);
 	let iseditname: boolean = $state(false);
 	let description = $state('');
+	let descSaving = $state(false);
+	let descSaved = $state(false);
 
 	const milestone = $derived(projectManager.milestoneData);
 
@@ -63,13 +65,19 @@
 	}
 
 	async function saveDescription() {
+		descSaving = true;
+		descSaved = false;
 		taskManager.setIds(projectManager.projectId, projectManager.milestoneId);
 		await taskManager.updateTask({ content: description }, taskValue.id);
+		descSaving = false;
+		descSaved = true;
+		setTimeout(() => (descSaved = false), 2000);
 	}
 
 	let descriptionTimeout: any = $state(null);
 
 	function handleDescriptionInput() {
+		descSaved = false;
 		if (descriptionTimeout) clearTimeout(descriptionTimeout);
 		descriptionTimeout = setTimeout(() => {
 			saveDescription();
@@ -91,7 +99,7 @@
 				{#if iseditname}
 					<Input
 						onkeydown={(event) => {
-							if (event.key == 'Enter') updatedName(event);
+							if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); updatedName(event); }
 						}}
 						onchange={(event) => updatedName(event)}
 						bind:value={taskName}
@@ -111,7 +119,17 @@
 				{/if}
 				<TaskTableFormModal {membersByProject} {taskValue} />
 
-				<Label class="pt-4 pl-2 text-xl font-semibold">Description:</Label>
+				<div class="flex items-center gap-2 pt-4 pl-2">
+					<Label class="text-xl font-semibold">Description:</Label>
+					{#if descSaving}
+						<span class="flex items-center gap-1 text-xs text-muted-foreground">
+							<svg class="size-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+							Saving...
+						</span>
+					{:else if descSaved}
+						<span class="text-xs text-green-500">Saved</span>
+					{/if}
+				</div>
 				<div class="my-2">
 					<Textarea
 						bind:value={description}
